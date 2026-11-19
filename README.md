@@ -1,16 +1,34 @@
-# 181 Claisebrook Rd: self-managed leasing kit (DRAFT)
+# 181 Claisebrook Rd: self-managed leasing site
 
-Hosted as a draft on GitHub Pages at https://181claisebrook.com.au (custom domain) and https://johnbreed.github.io/181claisebrook/. The yellow DRAFT banner and `noindex` tag are still in place. Lease from $60,000 p.a. + outgoings. Leased as the whole building only. The enquiry form is not connected yet (falls back to email). The form includes a required Budget field ($ per annum).
+Live on GitHub Pages at https://181claisebrook.com.au (custom domain) and https://johnbreed.github.io/181claisebrook/.
 
-- index.html + img/: single-page listing site (static, no external dependencies).
-- preview-desktop.png / preview-mobile.png: headless Chrome renders.
-- apps-script.gs: Google Apps Script doPost. It appends form enquiries to the Sheet "181 Claisebrook Rd - Lease Inquiries" (tab "Inquiries"). Setup steps are at the top of the file. Not deployed.
+Lease from $60,000 p.a. + outgoings. Whole building only. Available immediately. Contact is the enquiry form, the on-page chat, or info@181claisebrook.com.au — no phone number.
+
+- index.html + img/: single-page listing site.
+- chat.css / chat.js: floating listing chat widget (Phase 1 scripted FAQ; Phase 2 LLM is prepared but off).
+- preview-desktop.png / preview-mobile.png / preview-chat.png: page previews (chat preview is the widget open on a mobile viewport).
+- apps-script.gs: Google Apps Script doPost. Appends form and chat enquiries to the Sheet "181 Claisebrook Rd - Lease Inquiries" (tab "Inquiries"). Setup steps are at the top of the file. Not deployed yet — until it is, the form and chat fall back to email.
 - print/qr-code.png (1640 px) and print/qr-code.svg: point to https://181claisebrook.com.au
-- print/sign-mockup.png: 2400x1200 sign mockup (2:1). FOR LEASE / 181 CLAISEBROOK RD, QR, and info@181claisebrook.com.au only — no phone number.
+- print/sign-mockup.png: 2400x1200 sign mockup. FOR LEASE / 181 CLAISEBROOK RD, QR, and info@181claisebrook.com.au only — no phone number.
+- robots.txt allows all and points at sitemap.xml (https://181claisebrook.com.au/).
+- A “Floor plan coming soon” placeholder is on the page; there is no plan file yet.
 
-## Before going live (John)
-1. Rent is shown as “Lease from $60,000 p.a. + outgoings”. Confirm availability (still marked TBC). Contact is info@181claisebrook.com.au; there is no phone number anywhere — enquiry form or email only.
-2. Remove the `<meta name="robots" content="noindex">` line, the yellow DRAFT banner, and the robots.txt `Disallow: /` once ready to be found.
-3. Deploy apps-script.gs as a web app and paste its /exec URL into the form action in index.html. The Sheet header should include a Budget column (replacing Area needed): Date received | Name | Business | Email | Phone | Intended use | Budget | Preferred start | Source | Status | Next action | Notes.
-4. Optional: regenerate the QR with `?src=sign` so sign scans are tagged "sign/QR" in the Sheet, then regenerate the sign.
-5. Check City of Vincent signage rules, and get lender (Granite) consent before any lease. Consent has been deferred by John.
+## Enquiry form and chat leads
+Required fields include “Your rent budget ($ per annum)”. Sheet columns:
+
+Date received | Name | Business | Email | Phone | Intended use | Budget | Preferred start | Source | Status | Next action | Notes
+
+Chat leads use Source = `chat`. Deploy apps-script.gs as a web app and paste its /exec URL into the form action in index.html. If the endpoint is still the placeholder or the post fails, both the form and the chat fall back to mailto:info@181claisebrook.com.au.
+
+## Chat bot
+Phase 1 (live now, no API key): the widget answers only from listing facts (rent, whole building only, size/specs, location, former NATA lab fit-out, approvals are the tenant’s responsibility, roller door fixed shut, inspections by appointment via email, available immediately). Keyword/intent matching and quick-reply buttons. Unknown questions get “I’ll pass that to the owner” and a lead form (name, email, intended use, rent budget p.a., message). It does not invent facts and does not show a phone number.
+
+Phase 2 (prepared, not enabled): apps-script.gs has a `mode=chat` doPost path that calls the OpenAI Chat Completions API with a system prompt built from the same listing facts. The API key must be stored as the Script Property `OPENAI_API_KEY` (never in the repo). In chat.js, `USE_LLM` is false; set it to true only after the script is deployed with a key. Browser CORS on script.google.com may block reading the model’s reply — if that happens, leave Phase 1 on or add a CORS-friendly proxy.
+
+Open the widget with `?chat=open` or `#chat` (used for the mobile preview screenshot).
+
+## Still to do
+1. Deploy apps-script.gs and paste the /exec URL into index.html (and re-test the form and chat lead).
+2. Replace the floor-plan placeholder when a real plan is ready.
+3. Check photo rights for the Colliers images, or replace them.
+4. City of Vincent signage rules, and lender (Granite) consent before any lease (consent deferred by John).

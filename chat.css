@@ -1,0 +1,41 @@
+/* 181 Claisebrook — listing chat widget (Phase 1 scripted FAQ) */
+.cb-root{position:fixed;z-index:80;right:20px;bottom:20px;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#14202b;line-height:1.45;-webkit-font-smoothing:antialiased}
+.cb-fab{display:flex;align-items:center;gap:10px;background:#0f5c4a;color:#fff;border:0;border-radius:999px;padding:14px 18px 14px 16px;font:700 15px/1 inherit;cursor:pointer;box-shadow:0 8px 24px rgba(15,92,74,.35)}
+.cb-fab:focus-visible{outline:3px solid #f2a516;outline-offset:3px}
+.cb-fab svg{display:block;flex:none}
+.cb-fab-label{display:block}
+.cb-panel{display:none;flex-direction:column;position:absolute;right:0;bottom:0;width:min(400px,calc(100vw - 24px));height:min(640px,calc(100dvh - 24px));background:#fff;border:1px solid #e3e8ee;border-radius:16px;box-shadow:0 18px 50px rgba(20,32,43,.22);overflow:hidden}
+.cb-root.is-open .cb-panel{display:flex}
+.cb-root.is-open .cb-fab{display:none}
+.cb-head{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#0f5c4a;color:#fff;padding:14px 14px 14px 16px}
+.cb-head b{display:block;font-size:1rem;letter-spacing:-.02em}
+.cb-head span{display:block;font-size:.78rem;color:#d5ece5;font-weight:500}
+.cb-x{background:transparent;border:0;color:#fff;width:40px;height:40px;border-radius:10px;font-size:1.4rem;line-height:1;cursor:pointer}
+.cb-x:hover{background:rgba(255,255,255,.12)}
+.cb-x:focus-visible{outline:2px solid #f2a516}
+.cb-log{flex:1;overflow:auto;padding:14px 14px 8px;background:#f6f8fa;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+.cb-msg{max-width:86%;padding:10px 12px;border-radius:14px;font-size:.95rem}
+.cb-msg p{margin:0 0 .5em}.cb-msg p:last-child{margin:0}
+.cb-msg a{color:#0f5c4a;font-weight:700}
+.cb-bot{align-self:flex-start;background:#fff;border:1px solid #e3e8ee;border-bottom-left-radius:4px}
+.cb-user{align-self:flex-end;background:#0f5c4a;color:#fff;border-bottom-right-radius:4px}
+.cb-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 10px;background:#f6f8fa}
+.cb-chip{background:#fff;color:#0f5c4a;border:1.5px solid #0f5c4a;border-radius:999px;padding:7px 12px;font:700 .8rem inherit;cursor:pointer}
+.cb-chip:hover,.cb-chip:focus-visible{background:#e8f3ef;outline:none}
+.cb-form{background:#fff;border:1px solid #e3e8ee;border-radius:14px;padding:12px;display:grid;gap:8px;max-width:100%}
+.cb-form label{font-size:.78rem;font-weight:700;color:#5b6876}
+.cb-form input,.cb-form select,.cb-form textarea{width:100%;box-sizing:border-box;font:inherit;font-size:.95rem;padding:9px 10px;border:1px solid #cdd5dd;border-radius:10px;background:#fff;color:#14202b}
+.cb-form input:focus,.cb-form select:focus,.cb-form textarea:focus{outline:3px solid #bfe0d4;border-color:#0f5c4a}
+.cb-form .cb-send{background:#0f5c4a;color:#fff;border:0;border-radius:999px;padding:11px 14px;font:700 15px inherit;cursor:pointer}
+.cb-form .cb-send:disabled{opacity:.6;cursor:wait}
+.cb-note{font-size:.8rem;color:#5b6876;margin:0}
+.cb-composer{flex:none;display:flex;gap:8px;padding:10px 12px 12px;border-top:1px solid #e3e8ee;background:#fff}
+.cb-composer input{flex:1;min-width:0;font:inherit;padding:11px 12px;border:1px solid #cdd5dd;border-radius:999px}
+.cb-composer input:focus{outline:3px solid #bfe0d4;border-color:#0f5c4a}
+.cb-composer button{flex:none;background:#0f5c4a;color:#fff;border:0;border-radius:999px;padding:11px 16px;font:700 14px inherit;cursor:pointer}
+.cb-composer button:focus-visible,.cb-form .cb-send:focus-visible{outline:3px solid #f2a516;outline-offset:2px}
+@media (max-width:600px){
+  .cb-root{right:10px;bottom:10px;left:10px}
+  .cb-panel{width:auto;left:0;right:0;height:min(100dvh - 16px, 720px);border-radius:14px}
+  .cb-fab{padding:13px 16px}
+}
