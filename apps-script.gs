@@ -49,7 +49,7 @@ const INSPECT_HEADERS = [
 const VISIT_HEADERS = [
   'Timestamp', 'Visitor ID', 'Source', 'Medium', 'Campaign', 'Content', 'Referrer', 'Path'
 ];
-const KNOWN_SOURCES = ['sign-facade', 'sign-posts', 'linkedin', 'facebook', 'entrepreneurs-club', '(direct)'];
+const KNOWN_SOURCES = ['sign-facade', 'sign-posts', 'linkedin', 'facebook', 'entrepreneurs-club', 'gumtree', 'fb-marketplace', '(direct)'];
 
 const LISTING_SYSTEM_PROMPT =
   'You are a listing assistant for a commercial property at 181 Claisebrook Road, Perth WA 6000 ' +

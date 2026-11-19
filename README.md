@@ -56,6 +56,8 @@ Short links on this domain (redirect to the UTM URLs above; existing QR files ar
 - https://181claisebrook.com.au/li
 - https://181claisebrook.com.au/fb
 - https://181claisebrook.com.au/entrepreneurs-club
+- https://181claisebrook.com.au/gumtree
+- https://181claisebrook.com.au/marketplace
 
 
 The site (track.js) stores a random visitor ID and first-touch UTMs in localStorage, updates last-touch, and once per session pings Apps Script with `type=visit` (only when the script URL is set). Inspection requests, enquiry form posts and chat leads include visitorId + UTM fields. Mailto fallbacks include a `Ref: <source>` line.
