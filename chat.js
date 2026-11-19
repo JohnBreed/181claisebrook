@@ -75,7 +75,7 @@
     var n = document.createElement(tag);
     if (attrs) Object.keys(attrs).forEach(function (k) {
       if (k === "class") n.className = attrs[k];
-      else if (k.slice(0, 2) === "on") n.addEventListener(k.slice(2), attrs[k]);
+      else if (k.slice(0, 2) === "on") n.addEventListener(k.slice(2).toLowerCase(), attrs[k]);
       else if (k === "html") n.innerHTML = attrs[k];
       else if (attrs[k] !== false && attrs[k] != null) n.setAttribute(k, attrs[k]);
     });
@@ -100,7 +100,14 @@
   function setChips(items) {
     chipsEl.innerHTML = "";
     (items || []).forEach(function (c) {
-      chipsEl.appendChild(el("button", { class: "cb-chip", type: "button", onClick: function () { handleUser(c.q, c.t); } }, [c.t]));
+      chipsEl.appendChild(el("button", { class: "cb-chip", type: "button", onClick: function () {
+        if (c.t === "Book an inspection" && typeof window.openInspectionRequest === "function") {
+          closeChat();
+          window.openInspectionRequest();
+          return;
+        }
+        handleUser(c.q, c.t);
+      } }, [c.t]));
     });
   }
 

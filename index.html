@@ -21,7 +21,8 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"RealEstateListing","name":"For lease: 181 Claisebrook Road, Perth","url":"https://181claisebrook.com.au/","description":"About 280 sqm single-level building fitted out as a food laboratory, with a cool room, stainless benching, 3-phase power and 3 on-site car bays, 1.4 km from the Perth CBD. Lease from $60,000 p.a. + outgoings. Whole building only. Available immediately.","image":"https://181claisebrook.com.au/img/frontage.jpg","datePosted":"2026-11-19","address":{"@type":"PostalAddress","streetAddress":"181 Claisebrook Road","addressLocality":"Perth","addressRegion":"WA","postalCode":"6000","addressCountry":"AU"},"floorSize":{"@type":"QuantitativeValue","value":280,"unitCode":"MTK","unitText":"sqm"},"numberOfParkingSpaces":3,"offers":{"@type":"Offer","businessFunction":"http://purl.org/goodrelations/v1#LeaseOut","price":60000,"priceCurrency":"AUD","priceSpecification":{"@type":"UnitPriceSpecification","price":60000,"priceCurrency":"AUD","unitText":"per annum + outgoings"},"itemOffered":{"@type":"Building","name":"181 Claisebrook Road","address":{"@type":"PostalAddress","streetAddress":"181 Claisebrook Road","addressLocality":"Perth","addressRegion":"WA","postalCode":"6000","addressCountry":"AU"}}}}
 </script>
-<link rel="stylesheet" href="chat.css">
+<link rel="stylesheet" href="chat.css?v=2">
+<link rel="stylesheet" href="booking.css?v=2">
 <style>
 :root{--ink:#14202b;--muted:#5b6876;--line:#e3e8ee;--bg:#f6f8fa;--brand:#0f5c4a;--brand2:#e8f3ef;--accent:#f2a516;--r:14px}
 *{box-sizing:border-box}html{scroll-behavior:smooth}
@@ -87,20 +88,20 @@ input:focus,select:focus,textarea:focus{outline:3px solid #bfe0d4;border-color:v
 footer{background:var(--ink);color:#aab6c2;padding:28px 0;font-size:.85rem}
 footer p{margin:4px 0}
 @media (max-width:900px){.uses{grid-template-columns:1fr 1fr}.split,.loc{grid-template-columns:1fr}.kf{grid-template-columns:1fr 1fr}.kf div:nth-child(2){border-right:0}.kf div:nth-child(-n+2){border-bottom:1px solid var(--line)}}
-@media (max-width:600px){.hero{min-height:520px}.uses{grid-template-columns:1fr 1fr;gap:10px}.card{padding:14px}.card p{font-size:.85rem}form{grid-template-columns:1fr}.gallery{grid-template-columns:1fr 1fr;grid-template-rows:200px 130px 130px}.gallery figure:first-child{grid-column:span 2;grid-row:auto}.loc ul{grid-template-columns:1fr 1fr}section{padding:48px 0}header.top .btn{display:none}}
+@media (max-width:600px){.hero{min-height:520px}.uses{grid-template-columns:1fr 1fr;gap:10px}.card{padding:14px}.card p{font-size:.85rem}form{grid-template-columns:1fr}.gallery{grid-template-columns:1fr 1fr;grid-template-rows:200px 130px 130px}.gallery figure:first-child{grid-column:span 2;grid-row:auto}.loc ul{grid-template-columns:1fr 1fr}section{padding:48px 0}header.top .btn.ghost{display:none}}
 </style>
 </head>
 <body>
 <header class="top"><div class="wrap">
   <div class="logo">181 <span>Claisebrook</span> Rd</div>
-  <a class="btn sm" href="#enquire">Enquire / book an inspection</a>
+  <a class="btn sm ghost" href="#enquire">Enquire</a> <a class="btn sm js-book-inspection" href="#inspection">Book an inspection</a>
 </div></header>
 
 <section class="hero" aria-label="Overview"><div class="wrap">
   <span class="pill">For lease</span>
   <h1>Food-ready warehouse on the edge of the Perth CBD</h1>
   <p class="lead">About 280 sqm single-level building fitted out as a food laboratory, with a cool room, stainless benching, 3-phase power and 3 on-site car bays. It suits food production, a commercial kitchen, meal prep, catering or a NATA-style lab. It can also be stripped back to open office/warehouse.</p>
-  <div class="cta"><a class="btn" href="#enquire">Enquire now</a><a class="btn ghost" href="#specs">See the specs</a></div>
+  <div class="cta"><a class="btn" href="#enquire">Enquire now</a><a class="btn ghost js-book-inspection" href="#inspection">Book an inspection</a></div>
 </div></section>
 
 <div class="wrap keyfacts"><div class="kf">
@@ -169,7 +170,7 @@ footer p{margin:4px 0}
             <li>Flexible on fit-out: keep it as-is or strip back (by negotiation)</li>
       <li>Lease term and incentives by negotiation</li>
     </ul>
-    <div style="margin-top:18px"><a class="btn" style="background:var(--accent);color:#1b1300" href="#enquire">Book an inspection</a></div>
+    <div style="margin-top:18px"><a class="btn js-book-inspection" style="background:var(--accent);color:#1b1300" href="#inspection">Book an inspection</a></div>
   </aside>
 </div></section>
 
@@ -246,6 +247,7 @@ footer p{margin:4px 0}
   });
 })();
 </script>
-<script src="chat.js" defer></script>
+<script src="chat.js?v=2" defer></script>
+<script src="booking.js?v=2" defer></script>
 </body>
 </html>

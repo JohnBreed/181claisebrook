@@ -57,6 +57,7 @@ function doPost(e) {
   try {
     const p = (e && e.parameter) || {};
     if (p.website_hp) return json_({ ok: true });            // honeypot: likely a bot
+    if (p.type === 'inspection') return recordInspection_(p);
     if (p.mode === 'chat') return chatLlm_(p);               // Phase 2 LLM path
     if (!p.name || !p.email || !p.budget) return json_({ ok: false, error: 'missing fields' });
 
@@ -113,6 +114,50 @@ function chatLlm_(p) {
     return json_({ ok: false, error: 'LLM request failed' });
   }
   return json_({ ok: true, reply: String(reply).slice(0, 4000) });
+}
+
+
+/**
+ * Inspection requests go to the "Inspections" tab and are emailed to John only.
+ * Columns: Timestamp | Name | Email | Phone | Business | Years in business | Lease term | Note | Status
+ * Do not add other recipients (e.g. Ben).
+ */
+const INSPECT_SHEET = 'Inspections';
+const INSPECT_NOTIFY_EMAIL = 'john@envss.com.au';
+
+function recordInspection_(p) {
+  const clean = v => String(v || '').slice(0, 2000).replace(/^[=+\-@]/, "'$&");
+  if (!p.name || !p.email || !p.phone || !p.business || !p.yearsInBusiness || !p.leaseTerm || !p.note) {
+    return json_({ ok: false, error: 'missing fields' });
+  }
+  const ss = SpreadsheetApp.getActive();
+  let sheet = ss.getSheetByName(INSPECT_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(INSPECT_SHEET);
+    sheet.appendRow(['Timestamp', 'Name', 'Email', 'Phone', 'Business', 'Years in business', 'Lease term', 'Note', 'Status']);
+  }
+  sheet.appendRow([
+    new Date(),
+    clean(p.name), clean(p.email), clean(p.phone),
+    clean(p.business), clean(p.yearsInBusiness), clean(p.leaseTerm),
+    clean(p.note), 'New'
+  ]);
+  if (INSPECT_NOTIFY_EMAIL) {
+    MailApp.sendEmail(
+      INSPECT_NOTIFY_EMAIL,
+      'Inspection request: 181 Claisebrook Rd (' + clean(p.name) + ')',
+      [
+        'Name: ' + p.name,
+        'Email: ' + p.email,
+        'Phone: ' + p.phone,
+        'What does your business do?: ' + p.business,
+        'How long have you been in business?: ' + p.yearsInBusiness,
+        'What lease term are you after?: ' + p.leaseTerm,
+        'Why are you interested in leasing?: ' + p.note
+      ].join('\n')
+    );
+  }
+  return json_({ ok: true });
 }
 
 function doGet() { return json_({ ok: true, info: '181 Claisebrook inquiry endpoint' }); }

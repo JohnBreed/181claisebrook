@@ -32,3 +32,6 @@ Open the widget with `?chat=open` or `#chat` (used for the mobile preview screen
 2. Replace the floor-plan placeholder when a real plan is ready.
 3. Check photo rights for the Colliers images, or replace them.
 4. City of Vincent signage rules, and lender (Granite) consent before any lease (consent deferred by John).
+
+## Inspection requests
+Every “Book an inspection” CTA opens an inspection-request form (name, email, visitor phone, business, years in business, lease term, and why they're interested). It posts to Apps Script with `type=inspection` onto an Inspections tab, and emails John only (`john@envss.com.au` in the script — do not add other recipients). Until the web app URL is pasted into the form action, the form falls back to mailto:info@181claisebrook.com.au with the details prefilled. There is no self-serve calendar or slot picker.
