@@ -34,6 +34,7 @@
   window.openInspectionRequest = openInspectionRequest;
 
   function mailtoFallback(data) {
+    var ref = (window.ClaisebrookTrack && ClaisebrookTrack.refLine) ? ClaisebrookTrack.refLine() : "Ref: (direct)";
     var body = [
       "Inspection request: 181 Claisebrook Road",
       "",
@@ -43,7 +44,9 @@
       "What does your business do?: " + data.business,
       "How long have you been in business?: " + data.yearsInBusiness,
       "What lease term are you after?: " + data.leaseTerm,
-      "Why are you interested in leasing?: " + data.note
+      "Why are you interested in leasing?: " + data.note,
+      "",
+      ref
     ].join("\n");
     var url = "mailto:" + EMAIL + "?subject=" + encodeURIComponent("Inspection request: 181 Claisebrook Rd") + "&body=" + encodeURIComponent(body);
     var a = document.createElement("a");
@@ -65,6 +68,7 @@
     params.set("leaseTerm", data.leaseTerm);
     params.set("note", data.note);
     params.set("source", "inspection-form");
+    if (window.ClaisebrookTrack && ClaisebrookTrack.applyToParams) ClaisebrookTrack.applyToParams(params);
     if (!endpointReady()) {
       mailtoFallback(data);
       return Promise.resolve({ fallback: true });

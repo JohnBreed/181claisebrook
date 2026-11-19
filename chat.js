@@ -187,7 +187,8 @@
   }
 
   function mailtoFallback(data) {
-    var body = ["Name: " + data.name, "Email: " + data.email, "Intended use: " + data.use, "Rent budget p.a.: " + data.budget, "Source: chat", "", data.message || ""].join("\n");
+    var ref = (window.ClaisebrookTrack && ClaisebrookTrack.refLine) ? ClaisebrookTrack.refLine() : "Ref: (direct)";
+    var body = ["Name: " + data.name, "Email: " + data.email, "Intended use: " + data.use, "Rent budget p.a.: " + data.budget, "Source: chat", ref, "", data.message || ""].join("\n");
     var url = "mailto:" + EMAIL + "?subject=" + encodeURIComponent("Lease enquiry: 181 Claisebrook Rd") + "&body=" + encodeURIComponent(body);
     var a = document.createElement("a");
     a.href = url;
@@ -205,6 +206,7 @@
     params.set("budget", data.budget);
     params.set("message", data.message);
     params.set("source", "chat");
+    if (window.ClaisebrookTrack && ClaisebrookTrack.applyToParams) ClaisebrookTrack.applyToParams(params);
     params.set("business", "");
     params.set("phone", "");
     params.set("preferred_start", "");

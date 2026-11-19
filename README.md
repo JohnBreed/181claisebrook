@@ -35,3 +35,28 @@ Open the widget with `?chat=open` or `#chat` (used for the mobile preview screen
 
 ## Inspection requests
 Every “Book an inspection” CTA opens an inspection-request form (name, email, visitor phone, business, years in business, lease term, and why they're interested). It posts to Apps Script with `type=inspection` onto an Inspections tab, and emails John only (`john@envss.com.au` in the script — do not add other recipients). Until the web app URL is pasted into the form action, the form falls back to mailto:info@181claisebrook.com.au with the details prefilled. There is no self-serve calendar or slot picker.
+
+
+## QR codes and visit tracking
+Destination is always https://181claisebrook.com.au/ (with UTM query params). UTM codes were used rather than short `?s=` links: the QRs are 49 modules (vs 37 for the bare URL) and still scan cleanly at the sign size.
+
+| Use | URL | Files |
+| --- | --- | --- |
+| Facade sign | https://181claisebrook.com.au/?utm_source=sign-facade&utm_medium=qr&utm_campaign=lease | print/qr/sign-facade.png, .svg |
+| Post signs | https://181claisebrook.com.au/?utm_source=sign-posts&utm_medium=qr&utm_campaign=lease | print/qr/sign-posts.png, .svg |
+| LinkedIn | https://181claisebrook.com.au/?utm_source=linkedin&utm_medium=paid-social&utm_campaign=lease | print/qr/linkedin.png, .svg |
+| Facebook | https://181claisebrook.com.au/?utm_source=facebook&utm_medium=paid-social&utm_campaign=lease | print/qr/facebook.png, .svg |
+
+The facade sign mockup with the tracking QR is print/sign-mockup-facade.png.
+
+The site (track.js) stores a random visitor ID and first-touch UTMs in localStorage, updates last-touch, and once per session pings Apps Script with `type=visit` (only when the script URL is set). Inspection requests, enquiry form posts and chat leads include visitorId + UTM fields. Mailto fallbacks include a `Ref: <source>` line.
+
+### Sheet tabs (after redeploying apps-script.gs and running setupTrackingSheets)
+- **Visits** — Timestamp, Visitor ID, Source, Medium, Campaign, Content, Referrer, Path
+- **Inspections** — the request fields plus Source, Medium, Campaign, Visitor ID, Status
+- **Inquiries** — enquiry fields plus Form source, UTM Source, Medium, Campaign, Visitor ID
+- **Summary** — per source: unique visiting IDs, inspection requests, conversion %. Refreshed automatically on each visit/inspection, or run `refreshSummary_`.
+
+Notification emails go only to John (`NOTIFY_EMAIL` / `INSPECT_NOTIFY_EMAIL`). Do not add other recipients.
+
+After updating Code.gs, deploy a new version of the existing web app (the /exec URL stays the same) and run `setupTrackingSheets` once from the editor to create headers and the Summary tab.

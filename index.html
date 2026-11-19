@@ -21,8 +21,8 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"RealEstateListing","name":"For lease: 181 Claisebrook Road, Perth","url":"https://181claisebrook.com.au/","description":"About 280 sqm single-level building fitted out as a food laboratory, with a cool room, stainless benching, 3-phase power and 3 on-site car bays, 1.4 km from the Perth CBD. Lease from $60,000 p.a. + outgoings. Whole building only. Available immediately.","image":"https://181claisebrook.com.au/img/frontage.jpg","datePosted":"2026-11-19","address":{"@type":"PostalAddress","streetAddress":"181 Claisebrook Road","addressLocality":"Perth","addressRegion":"WA","postalCode":"6000","addressCountry":"AU"},"floorSize":{"@type":"QuantitativeValue","value":280,"unitCode":"MTK","unitText":"sqm"},"numberOfParkingSpaces":3,"offers":{"@type":"Offer","businessFunction":"http://purl.org/goodrelations/v1#LeaseOut","price":60000,"priceCurrency":"AUD","priceSpecification":{"@type":"UnitPriceSpecification","price":60000,"priceCurrency":"AUD","unitText":"per annum + outgoings"},"itemOffered":{"@type":"Building","name":"181 Claisebrook Road","address":{"@type":"PostalAddress","streetAddress":"181 Claisebrook Road","addressLocality":"Perth","addressRegion":"WA","postalCode":"6000","addressCountry":"AU"}}}}
 </script>
-<link rel="stylesheet" href="chat.css?v=2">
-<link rel="stylesheet" href="booking.css?v=2">
+<link rel="stylesheet" href="chat.css?v=3">
+<link rel="stylesheet" href="booking.css?v=3">
 <style>
 :root{--ink:#14202b;--muted:#5b6876;--line:#e3e8ee;--bg:#f6f8fa;--brand:#0f5c4a;--brand2:#e8f3ef;--accent:#f2a516;--r:14px}
 *{box-sizing:border-box}html{scroll-behavior:smooth}
@@ -202,8 +202,13 @@ footer p{margin:4px 0}
   </div>
   <div class="formbox">
     <!-- Posts to the Google Apps Script web app (see apps-script.gs). Replace the placeholder URL after deploying. -->
-    <form id="inquiry" action="https://script.google.com/macros/s/REPLACE-WITH-DEPLOYMENT-ID/exec" method="POST">
+    <form id="inquiry" action="https://script.google.com/macros/s/AKfycbxO2Oad6DE02EYhZ8oTmFoC73qbv1-O5A7sX9zUHF0Gx0D0F03sWwr09BeFyJWHaQyL/exec" method="POST">
       <input type="hidden" name="source" value="website">
+      <input type="hidden" name="visitorId" value="">
+      <input type="hidden" name="utm_source" value="">
+      <input type="hidden" name="utm_medium" value="">
+      <input type="hidden" name="utm_campaign" value="">
+      <input type="hidden" name="utm_content" value="">
       <input type="text" name="website_hp" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
       <div><label for="name">Name *</label><input id="name" name="name" required autocomplete="name"></div>
       <div><label for="business">Business *</label><input id="business" name="business" required autocomplete="organization"></div>
@@ -232,22 +237,56 @@ footer p{margin:4px 0}
 <script>
 (function(){
   var f=document.getElementById('inquiry'),m=document.getElementById('formMsg');
-  // Tag enquiries that arrive via the sign QR code (QR should point to ...?src=sign)
-  var p=new URLSearchParams(location.search).get('src');
-  if(p){f.source.value=p==='sign'?'sign/QR':p;}
+  var EMAIL='info@181claisebrook.com.au';
+  function attachTracking(){
+    var a = (window.ClaisebrookTrack && ClaisebrookTrack.attribution) ? ClaisebrookTrack.attribution() : {};
+    if(f.visitorId) f.visitorId.value = a.visitorId || '';
+    if(f.utm_source) f.utm_source.value = a.utm_source || '';
+    if(f.utm_medium) f.utm_medium.value = a.utm_medium || '';
+    if(f.utm_campaign) f.utm_campaign.value = a.utm_campaign || '';
+    if(f.utm_content) f.utm_content.value = a.utm_content || '';
+  }
+  function mailtoFallback(){
+    var ref = (window.ClaisebrookTrack && ClaisebrookTrack.refLine) ? ClaisebrookTrack.refLine() : 'Ref: (direct)';
+    var body = [
+      'Lease enquiry: 181 Claisebrook Road',
+      '',
+      'Name: ' + f.name.value,
+      'Business: ' + f.business.value,
+      'Email: ' + f.email.value,
+      'Phone: ' + (f.phone.value || ''),
+      'Intended use: ' + f.intended_use.value,
+      'Budget p.a.: ' + f.budget.value,
+      'Preferred start: ' + (f.preferred_start.value || ''),
+      '',
+      f.message.value || '',
+      '',
+      ref
+    ].join('\n');
+    var a=document.createElement('a');
+    a.href='mailto:'+EMAIL+'?subject='+encodeURIComponent('Lease enquiry: 181 Claisebrook Rd')+'&body='+encodeURIComponent(body);
+    a.rel='noopener';
+    document.body.appendChild(a); a.click(); a.remove();
+  }
   f.addEventListener('submit',function(e){
     e.preventDefault();
     if(f.website_hp.value){return;}
-    if(f.action.indexOf('REPLACE-WITH')>-1){m.innerHTML='The enquiry form isn\'t connected yet. Please email <a href="mailto:info@181claisebrook.com.au">info@181claisebrook.com.au</a>.';return;}
-    var btn=f.querySelector('button');btn.disabled=true;btn.textContent='Sending…';
+    attachTracking();
+    if(f.action.indexOf('REPLACE-WITH')>-1){
+      mailtoFallback();
+      m.innerHTML='The enquiry form isn\'t connected yet, so I\'ve opened an email to <a href="mailto:'+EMAIL+'">'+EMAIL+'</a> with your details. If that didn\'t open, please email us directly.';
+      return;
+    }
+    var btn=f.querySelector('button[type="submit"]')||f.querySelector('button');btn.disabled=true;btn.textContent='Sending…';
     fetch(f.action,{method:'POST',mode:'no-cors',body:new URLSearchParams(new FormData(f))})
       .then(function(){f.reset();m.textContent='Thanks, your enquiry has been received. We\'ll be in touch shortly.';})
-      .catch(function(){m.innerHTML='Sorry, something went wrong. Please email <a href="mailto:info@181claisebrook.com.au">info@181claisebrook.com.au</a>.';})
+      .catch(function(){mailtoFallback();m.innerHTML='Sorry, something went wrong. Please email <a href="mailto:'+EMAIL+'">'+EMAIL+'</a>.';})
       .finally(function(){btn.disabled=false;btn.textContent='Send enquiry';});
   });
 })();
 </script>
-<script src="chat.js?v=2" defer></script>
-<script src="booking.js?v=2" defer></script>
+<script src="track.js?v=3" defer></script>
+<script src="chat.js?v=3" defer></script>
+<script src="booking.js?v=3" defer></script>
 </body>
 </html>

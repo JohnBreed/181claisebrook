@@ -1,37 +1,55 @@
 /**
- * 181 Claisebrook Rd: lease inquiry form + optional Phase 2 chat → Google Sheet
+ * 181 Claisebrook Rd: enquiries, inspection requests, visit tracking → Google Sheet
  *
- * SETUP (about 5 minutes, done by John in his own Google account):
+ * SETUP:
  * 1. Open the Sheet "181 Claisebrook Rd - Lease Inquiries" > Extensions > Apps Script.
  * 2. Paste this whole file into Code.gs and save.
- * 3. Deploy > New deployment > type "Web app".
+ * 3. Deploy > New deployment (or new version of the existing deployment) > type "Web app".
  *      Execute as: Me (John)        Who has access: Anyone
- *    (The form needs "Anyone" access to post. The Sheet itself stays private.)
- * 4. Authorise when prompted, then copy the Web app URL (…/macros/s/XXXX/exec).
- * 5. In index.html, replace
- *      https://script.google.com/macros/s/REPLACE-WITH-DEPLOYMENT-ID/exec
- *    with that URL. Submit a test enquiry and check that a row appears.
- * 6. Optional: set NOTIFY_EMAIL below to get an email for each new enquiry.
+ * 4. Authorise when prompted. The current web app URL is:
+ *      https://script.google.com/macros/s/AKfycbxO2Oad6DE02EYhZ8oTmFoC73qbv1-O5A7sX9zUHF0Gx0D0F03sWwr09BeFyJWHaQyL/exec
+ *    That URL is already set as the form action in index.html.
+ * 5. Run setupTrackingSheets() once from the editor to create/refresh
+ *    the Visits, Inspections, Inquiries and Summary tabs/headers.
  *
- * Column order matches the Sheet header:
+ * Notifications go only to NOTIFY_EMAIL (John). Do not add other recipients.
+ *
+ * Inquiries columns:
  * Date received | Name | Business | Email | Phone | Intended use | Budget |
- * Preferred start | Source | Status | Next action | Notes
- * (Budget is the applicant's rent budget, $ per annum. The property is leased as the whole building only.
- *  Chat leads arrive with Source = "chat".)
+ * Preferred start | Form source | UTM Source | Medium | Campaign | Visitor ID |
+ * Status | Next action | Notes
  *
- * PHASE 2 (LLM chat — prepared, not enabled):
- * The widget (chat.js) uses a scripted FAQ unless USE_LLM is set to true.
- * To enable later:
- *   a) Project Settings > Script Properties > add OPENAI_API_KEY (never commit the key).
- *   b) Redeploy this script.
- *   c) In chat.js, set USE_LLM = true.
- * A POST with mode=chat and message=... calls OpenAI with the listing-facts system
- * prompt below and returns { ok, reply }. Browser CORS on script.google.com can
- * block reading the response; if that happens, keep USE_LLM false or add a
- * CORS-friendly proxy. Lead capture (source=chat) always uses the form path, not the LLM path.
+ * Inspections columns:
+ * Timestamp | Name | Email | Phone | Business | Years in business | Lease term |
+ * Note | Source | Medium | Campaign | Visitor ID | Status
+ *
+ * Visits columns:
+ * Timestamp | Visitor ID | Source | Medium | Campaign | Content | Referrer | Path
+ *
+ * Summary (refreshed on each visit/inspection, or run refreshSummary_):
+ * Source | Visits (unique visitors) | Inspection requests | Conversion %
  */
-const SHEET_NAME = 'Inquiries';   // tab name in the Sheet
-const NOTIFY_EMAIL = '';          // e.g. 'john@example.com'; leave blank to skip
+
+const SHEET_NAME = 'Inquiries';
+const NOTIFY_EMAIL = 'john@envss.com.au';
+const INSPECT_SHEET = 'Inspections';
+const INSPECT_NOTIFY_EMAIL = 'john@envss.com.au';
+const VISIT_SHEET = 'Visits';
+const SUMMARY_SHEET = 'Summary';
+
+const INQUIRY_HEADERS = [
+  'Date received', 'Name', 'Business', 'Email', 'Phone', 'Intended use', 'Budget',
+  'Preferred start', 'Form source', 'UTM Source', 'Medium', 'Campaign', 'Visitor ID',
+  'Status', 'Next action', 'Notes'
+];
+const INSPECT_HEADERS = [
+  'Timestamp', 'Name', 'Email', 'Phone', 'Business', 'Years in business', 'Lease term',
+  'Note', 'Source', 'Medium', 'Campaign', 'Visitor ID', 'Status'
+];
+const VISIT_HEADERS = [
+  'Timestamp', 'Visitor ID', 'Source', 'Medium', 'Campaign', 'Content', 'Referrer', 'Path'
+];
+const KNOWN_SOURCES = ['sign-facade', 'sign-posts', 'linkedin', 'facebook', '(direct)'];
 
 const LISTING_SYSTEM_PROMPT =
   'You are a listing assistant for a commercial property at 181 Claisebrook Road, Perth WA 6000 ' +
@@ -56,26 +74,47 @@ function doPost(e) {
   lock.waitLock(10000);
   try {
     const p = (e && e.parameter) || {};
-    if (p.website_hp) return json_({ ok: true });            // honeypot: likely a bot
+    if (p.website_hp) return json_({ ok: true });
+    if (p.type === 'visit') return recordVisit_(p);
     if (p.type === 'inspection') return recordInspection_(p);
-    if (p.mode === 'chat') return chatLlm_(p);               // Phase 2 LLM path
+    if (p.mode === 'chat') return chatLlm_(p);
     if (!p.name || !p.email || !p.budget) return json_({ ok: false, error: 'missing fields' });
 
-    const clean = v => String(v || '').slice(0, 2000).replace(/^[=+\-@]/, "'$&"); // stop formula injection
-    const sheet = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
-    sheet.appendRow([
-      new Date(),
-      clean(p.name), clean(p.business), clean(p.email), clean(p.phone),
-      clean(p.intended_use), clean(p.budget), clean(p.preferred_start),
-      clean(p.source || 'website'),
-      'New', 'Reply and offer an inspection', clean(p.message)
-    ]);
+    const clean = v => String(v || '').slice(0, 2000).replace(/^[=+\-@]/, "'$&");
+    const ss = SpreadsheetApp.getActive();
+    const sheet = ensureSheet_(ss, SHEET_NAME, INQUIRY_HEADERS);
+    appendByHeader_(sheet, INQUIRY_HEADERS, {
+      'Date received': new Date(),
+      'Name': clean(p.name),
+      'Business': clean(p.business),
+      'Email': clean(p.email),
+      'Phone': clean(p.phone),
+      'Intended use': clean(p.intended_use),
+      'Budget': clean(p.budget),
+      'Preferred start': clean(p.preferred_start),
+      'Form source': clean(p.source || 'website'),
+      'UTM Source': clean(p.utm_source),
+      'Medium': clean(p.utm_medium),
+      'Campaign': clean(p.utm_campaign),
+      'Visitor ID': clean(p.visitorId),
+      'Status': 'New',
+      'Next action': 'Reply and offer an inspection',
+      'Notes': clean(p.message)
+    });
 
     if (NOTIFY_EMAIL) {
-      MailApp.sendEmail(NOTIFY_EMAIL, 'New lease enquiry: 181 Claisebrook Rd (' + clean(p.business) + ')',
-        ['Name: ' + p.name, 'Business: ' + p.business, 'Email: ' + p.email, 'Phone: ' + p.phone,
-         'Use: ' + p.intended_use, 'Budget: ' + p.budget, 'Start: ' + p.preferred_start,
-         'Source: ' + p.source, '', p.message].join('\n'));
+      MailApp.sendEmail(
+        NOTIFY_EMAIL,
+        'New lease enquiry: 181 Claisebrook Rd (' + clean(p.business) + ')',
+        [
+          'Name: ' + p.name, 'Business: ' + p.business, 'Email: ' + p.email, 'Phone: ' + p.phone,
+          'Use: ' + p.intended_use, 'Budget: ' + p.budget, 'Start: ' + p.preferred_start,
+          'Form source: ' + (p.source || 'website'),
+          'Ref: ' + (p.utm_source || '(direct)'),
+          'Visitor ID: ' + (p.visitorId || ''),
+          '', p.message
+        ].join('\n')
+      );
     }
     return json_({ ok: true });
   } finally {
@@ -83,10 +122,6 @@ function doPost(e) {
   }
 }
 
-/**
- * Phase 2: optional LLM reply. Requires Script Property OPENAI_API_KEY.
- * Not used by the widget until chat.js USE_LLM is true.
- */
 function chatLlm_(p) {
   const key = PropertiesService.getScriptProperties().getProperty('OPENAI_API_KEY');
   if (!key) return json_({ ok: false, error: 'LLM not configured' });
@@ -117,31 +152,28 @@ function chatLlm_(p) {
 }
 
 
-/**
- * Inspection requests go to the "Inspections" tab and are emailed to John only.
- * Columns: Timestamp | Name | Email | Phone | Business | Years in business | Lease term | Note | Status
- * Do not add other recipients (e.g. Ben).
- */
-const INSPECT_SHEET = 'Inspections';
-const INSPECT_NOTIFY_EMAIL = 'john@envss.com.au';
-
 function recordInspection_(p) {
   const clean = v => String(v || '').slice(0, 2000).replace(/^[=+\-@]/, "'$&");
   if (!p.name || !p.email || !p.phone || !p.business || !p.yearsInBusiness || !p.leaseTerm || !p.note) {
     return json_({ ok: false, error: 'missing fields' });
   }
   const ss = SpreadsheetApp.getActive();
-  let sheet = ss.getSheetByName(INSPECT_SHEET);
-  if (!sheet) {
-    sheet = ss.insertSheet(INSPECT_SHEET);
-    sheet.appendRow(['Timestamp', 'Name', 'Email', 'Phone', 'Business', 'Years in business', 'Lease term', 'Note', 'Status']);
-  }
-  sheet.appendRow([
-    new Date(),
-    clean(p.name), clean(p.email), clean(p.phone),
-    clean(p.business), clean(p.yearsInBusiness), clean(p.leaseTerm),
-    clean(p.note), 'New'
-  ]);
+  const sheet = ensureSheet_(ss, INSPECT_SHEET, INSPECT_HEADERS);
+  appendByHeader_(sheet, INSPECT_HEADERS, {
+    'Timestamp': new Date(),
+    'Name': clean(p.name),
+    'Email': clean(p.email),
+    'Phone': clean(p.phone),
+    'Business': clean(p.business),
+    'Years in business': clean(p.yearsInBusiness),
+    'Lease term': clean(p.leaseTerm),
+    'Note': clean(p.note),
+    'Source': clean(p.utm_source || '(direct)'),
+    'Medium': clean(p.utm_medium),
+    'Campaign': clean(p.utm_campaign),
+    'Visitor ID': clean(p.visitorId),
+    'Status': 'New'
+  });
   if (INSPECT_NOTIFY_EMAIL) {
     MailApp.sendEmail(
       INSPECT_NOTIFY_EMAIL,
@@ -153,11 +185,133 @@ function recordInspection_(p) {
         'What does your business do?: ' + p.business,
         'How long have you been in business?: ' + p.yearsInBusiness,
         'What lease term are you after?: ' + p.leaseTerm,
-        'Why are you interested in leasing?: ' + p.note
+        'Why are you interested in leasing?: ' + p.note,
+        'Ref: ' + (p.utm_source || '(direct)'),
+        'Visitor ID: ' + (p.visitorId || '')
       ].join('\n')
     );
   }
+  refreshSummary_();
   return json_({ ok: true });
+}
+
+function recordVisit_(p) {
+  const clean = v => String(v || '').slice(0, 2000).replace(/^[=+\-@]/, "'$&");
+  if (!p.visitorId) return json_({ ok: false, error: 'missing visitorId' });
+  const ss = SpreadsheetApp.getActive();
+  const sheet = ensureSheet_(ss, VISIT_SHEET, VISIT_HEADERS);
+  appendByHeader_(sheet, VISIT_HEADERS, {
+    'Timestamp': p.ts ? new Date(Number(p.ts) || p.ts) : new Date(),
+    'Visitor ID': clean(p.visitorId),
+    'Source': clean(p.utm_source || '(direct)'),
+    'Medium': clean(p.utm_medium),
+    'Campaign': clean(p.utm_campaign),
+    'Content': clean(p.utm_content),
+    'Referrer': clean(p.referrer),
+    'Path': clean(p.path)
+  });
+  refreshSummary_();
+  return json_({ ok: true });
+}
+
+/** Run once from the Apps Script editor after redeploying. */
+function setupTrackingSheets() {
+  const ss = SpreadsheetApp.getActive();
+  ensureSheet_(ss, SHEET_NAME, INQUIRY_HEADERS);
+  ensureSheet_(ss, INSPECT_SHEET, INSPECT_HEADERS);
+  ensureSheet_(ss, VISIT_SHEET, VISIT_HEADERS);
+  refreshSummary_();
+}
+
+function ensureSheet_(ss, name, headers) {
+  let sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
+    return sheet;
+  }
+  const lastCol = Math.max(sheet.getLastColumn(), 1);
+  const have = sheet.getLastRow() === 0 ? [] : sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(String);
+  if (have.join('\0') === headers.join('\0')) return sheet;
+  if (sheet.getLastRow() <= 1) {
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
+    return sheet;
+  }
+  headers.forEach(function (h) {
+    if (have.indexOf(h) === -1) {
+      sheet.getRange(1, sheet.getLastColumn() + 1).setValue(h);
+      have.push(h);
+    }
+  });
+  return sheet;
+}
+
+function headerMap_(sheet) {
+  const lastCol = Math.max(sheet.getLastColumn(), 1);
+  const have = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  const map = {};
+  have.forEach(function (h, i) { if (h) map[String(h)] = i; });
+  return map;
+}
+
+function appendByHeader_(sheet, headers, record) {
+  const map = headerMap_(sheet);
+  const width = Math.max(sheet.getLastColumn(), headers.length);
+  const row = new Array(width).fill('');
+  Object.keys(record).forEach(function (h) {
+    if (map[h] != null) row[map[h]] = record[h];
+  });
+  sheet.appendRow(row);
+}
+
+function colValues_(sheet, header) {
+  const map = headerMap_(sheet);
+  if (map[header] == null || sheet.getLastRow() < 2) return [];
+  return sheet.getRange(2, map[header] + 1, sheet.getLastRow() - 1, 1).getValues().map(function (r) { return r[0]; });
+}
+
+function refreshSummary_() {
+  const ss = SpreadsheetApp.getActive();
+  let tab = ss.getSheetByName(SUMMARY_SHEET);
+  if (!tab) tab = ss.insertSheet(SUMMARY_SHEET);
+  const visits = ss.getSheetByName(VISIT_SHEET);
+  const inspections = ss.getSheetByName(INSPECT_SHEET);
+
+  const visitSources = visits ? colValues_(visits, 'Source') : [];
+  const visitIds = visits ? colValues_(visits, 'Visitor ID') : [];
+  const inspectSources = inspections ? colValues_(inspections, 'Source') : [];
+
+  const uniqueBySource = {};
+  visitSources.forEach(function (src, i) {
+    const key = String(src || '(direct)');
+    if (!uniqueBySource[key]) uniqueBySource[key] = {};
+    const id = String(visitIds[i] || '');
+    if (id) uniqueBySource[key][id] = true;
+  });
+  const inspectCount = {};
+  inspectSources.forEach(function (src) {
+    const key = String(src || '(direct)');
+    inspectCount[key] = (inspectCount[key] || 0) + 1;
+  });
+
+  const sources = KNOWN_SOURCES.slice();
+  Object.keys(uniqueBySource).concat(Object.keys(inspectCount)).forEach(function (s) {
+    if (sources.indexOf(s) === -1) sources.push(s);
+  });
+
+  const rows = [['Source', 'Visits (unique visitors)', 'Inspection requests', 'Conversion %']];
+  sources.forEach(function (s) {
+    const v = uniqueBySource[s] ? Object.keys(uniqueBySource[s]).length : 0;
+    const n = inspectCount[s] || 0;
+    const pct = v === 0 ? '—' : (Math.round((n / v) * 1000) / 10) + '%';
+    rows.push([s, v, n, pct]);
+  });
+  tab.clear();
+  tab.getRange(1, 1, rows.length, 4).setValues(rows);
+  tab.getRange(1, 1, 1, 4).setFontWeight('bold');
+  tab.getRange(rows.length + 2, 1, 1, 2).setValues([['Last refreshed', new Date()]]);
 }
 
 function doGet() { return json_({ ok: true, info: '181 Claisebrook inquiry endpoint' }); }
