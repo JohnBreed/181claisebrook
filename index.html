@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>For Lease: 181 Claisebrook Road, Perth | Food-ready warehouse, ~280 sqm</title>
-<meta name="description" content="For lease: 181 Claisebrook Road, Perth WA 6000. About 280 sqm single-level building with cool room, lab benching, 3-phase power and 3 car bays, 1.4 km from the Perth CBD. Asking rent $60,000 p.a. + outgoings + GST.">
+<meta name="description" content="For lease: 181 Claisebrook Road, Perth WA 6000. About 280 sqm single-level building with cool room, lab benching, 3-phase power and 3 car bays, 1.4 km from the Perth CBD. Lease from $60,000 p.a. + outgoings. Whole building only.">
 <meta name="robots" content="noindex"><!-- DRAFT: remove this line when John approves publishing -->
 <style>
 :root{--ink:#14202b;--muted:#5b6876;--line:#e3e8ee;--bg:#f6f8fa;--brand:#0f5c4a;--brand2:#e8f3ef;--accent:#f2a516;--r:14px}
@@ -139,8 +139,8 @@ footer p{margin:4px 0}
     <p class="note">The tenant is responsible for getting and keeping its own planning/use approvals, licences and registrations, for any fit-out works (with the landlord's consent), and for make-good at the end of the lease. Areas are approximate and all information is indicative only. Prospective tenants should make their own enquiries.</p>
   </div>
   <aside class="rent">
-    <div style="opacity:.8;font-size:.85rem;text-transform:uppercase;letter-spacing:.08em">Asking rent</div>
-    <div class="big">$60,000 p.a. + outgoings + GST</div>
+    <div class="big">Lease from $60,000 p.a. + outgoings</div>
+    <div style="margin-top:8px;font-weight:700">Whole building only</div>
     <ul>
             <li>Flexible on fit-out: keep it as-is or strip back (by negotiation)</li>
       <li>Lease term and incentives by negotiation</li>
@@ -188,10 +188,9 @@ footer p{margin:4px 0}
         <select id="use" name="intended_use" required>
           <option value="">Select…</option><option>Commercial kitchen</option><option>Meal prep</option><option>Catering</option><option>Food production / manufacturing</option><option>Laboratory (NATA or other)</option><option>Cold storage</option><option>Office / warehouse (strip-out)</option><option>Other</option>
         </select></div>
-      <div><label for="area">Area needed</label>
-        <select id="area" name="area_needed">
-          <option value="">Select…</option><option>Whole building (~280 sqm)</option><option>Under 200 sqm</option><option>200–280 sqm</option><option>Not sure yet</option>
-        </select></div>
+      <div class="full" style="margin:0"><p class="note" style="margin:0">The property is leased as the whole building only (approx. 280 sqm). It is not available in part.</p></div>
+      <div class="full"><label for="budget">Your rent budget ($ per annum) *</label>
+        <input id="budget" name="budget" type="text" inputmode="decimal" required autocomplete="off" placeholder="e.g. 60,000"></div>
       <div class="full"><label for="start">Preferred start date</label><input id="start" type="date" name="preferred_start"></div>
       <div class="full"><label for="msg">Message</label><textarea id="msg" name="message" rows="4" placeholder="Fit-out needs, lease term, questions, best time to inspect…"></textarea></div>
       <div class="full"><button class="btn" type="submit" style="width:100%">Send enquiry</button></div>
