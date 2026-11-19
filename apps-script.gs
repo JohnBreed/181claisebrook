@@ -1,5 +1,5 @@
 /**
- * 181 Claisebrook Rd: enquiries, inspection requests, visit tracking → Google Sheet
+ * 181 Claisebrook Rd: enquiries, inspection requests, visit tracking -> Google Sheet
  *
  * SETUP:
  * 1. Open the Sheet "181 Claisebrook Rd - Lease Inquiries" > Extensions > Apps Script.
@@ -49,7 +49,7 @@ const INSPECT_HEADERS = [
 const VISIT_HEADERS = [
   'Timestamp', 'Visitor ID', 'Source', 'Medium', 'Campaign', 'Content', 'Referrer', 'Path'
 ];
-const KNOWN_SOURCES = ['sign-facade', 'sign-posts', 'linkedin', 'facebook', '(direct)'];
+const KNOWN_SOURCES = ['sign-facade', 'sign-posts', 'linkedin', 'facebook', 'entrepreneurs-club', '(direct)'];
 
 const LISTING_SYSTEM_PROMPT =
   'You are a listing assistant for a commercial property at 181 Claisebrook Road, Perth WA 6000 ' +
@@ -88,7 +88,7 @@ function doPost(e) {
       'Name': clean(p.name),
       'Business': clean(p.business),
       'Email': clean(p.email),
-      'Phone': clean(p.phone),
+      'Phone': p.phone ? "'" + clean(p.phone) : '',
       'Intended use': clean(p.intended_use),
       'Budget': clean(p.budget),
       'Preferred start': clean(p.preferred_start),
@@ -163,7 +163,7 @@ function recordInspection_(p) {
     'Timestamp': new Date(),
     'Name': clean(p.name),
     'Email': clean(p.email),
-    'Phone': clean(p.phone),
+    'Phone': p.phone ? "'" + clean(p.phone) : '',
     'Business': clean(p.business),
     'Years in business': clean(p.yearsInBusiness),
     'Lease term': clean(p.leaseTerm),
@@ -305,7 +305,7 @@ function refreshSummary_() {
   sources.forEach(function (s) {
     const v = uniqueBySource[s] ? Object.keys(uniqueBySource[s]).length : 0;
     const n = inspectCount[s] || 0;
-    const pct = v === 0 ? '—' : (Math.round((n / v) * 1000) / 10) + '%';
+    const pct = v === 0 ? '-' : (Math.round((n / v) * 1000) / 10) + '%';
     rows.push([s, v, n, pct]);
   });
   tab.clear();
