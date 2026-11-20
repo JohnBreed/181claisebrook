@@ -2,7 +2,7 @@
 
 Live on GitHub Pages at https://181claisebrook.com.au (custom domain) and https://johnbreed.github.io/181claisebrook/.
 
-Lease from $60,000 p.a. + outgoings. Whole building only. Available immediately. Contact is the enquiry form, the on-page chat, or info@181claisebrook.com.au — no phone number.
+Lease $60,000 p.a. + outgoings + GST. Whole building only. Available immediately. Contact is the enquiry form, the on-page chat, or info@181claisebrook.com.au — no phone number.
 
 - index.html + img/: single-page listing site.
 - chat.css / chat.js: floating listing chat widget (Phase 1 scripted FAQ; Phase 2 LLM is prepared but off).
