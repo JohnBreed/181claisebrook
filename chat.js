@@ -10,7 +10,7 @@
   var USE_LLM = false; // Phase 2 flag — leave false until the LLM path is ready
 
   var FACTS = {
-    rent: "Lease $60,000 p.a. + outgoings + GST. The property is leased as the whole building only.",
+    rent: "Lease $60,000 p.a. + outgoings. The property is leased as the whole building only.",
     whole: "The property is leased as the whole building only (approx. 280 sqm). It is not available in part.",
     size: "The building is approx. 280 sqm on a single level, on 468 sqm of land, with 13.66 m frontage. Areas are approximate.",
     specs: "It's a single-level converted office/warehouse, currently fitted out as food laboratories. The listing specs are: 3 on-site car bays plus street parking nearby, 3-phase power, air conditioning, a monitored alarm system, reception, individual meeting rooms and offices, open-plan lab areas with stainless benching, a cool room, staff amenities, a storeroom/archive and wash rooms. The front roller door is currently fixed shut; its condition is to be confirmed.",
